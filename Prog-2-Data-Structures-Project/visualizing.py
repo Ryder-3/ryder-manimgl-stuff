@@ -440,7 +440,8 @@ class Main(ThreeDScene):
 
         creation_animations = []
         for brand in brands:
-            creation_animations.append(ShowCreation(review_over_time_graphs[brand].line))
+            if brand != "Samsung":
+                creation_animations.append(ShowCreation(review_over_time_graphs[brand].line))
 
         self.play(
             *creation_animations,
