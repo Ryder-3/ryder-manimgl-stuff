@@ -20,18 +20,15 @@ class Main(ThreeDScene):
             data = json.load(formatted_json)
         self.frame.set_euler_angles(0,0,0)
 
-        # Store data as instance variables for easy access
         self.data = data
-        self.setup_data()
+        self.setupData()
 
-        # Run presentation
-        self.show_title()
-        self.part_1_bar_chart_analysis()
-        self.part_2_time_series_analysis()
-        self.embed()
+        self.showTitle()
+        self.part1BarChartAnalysis()
+        self.part2TimeSeriesAnalysis()
+        
+    def setupData(self):
 
-    def setup_data(self):
-        """Setup all data structures needed for the presentation"""
         averaged_scores = {}
         for brand in self.data:
             if brand != 'brand':
@@ -41,14 +38,14 @@ class Main(ThreeDScene):
         scores = list(averaged_scores.values())
         brands = list(averaged_scores.keys())
 
-        # Store original brand names before renaming
+        
         original_brand_at_0 = brands[0]
         brands[0] = 'Unknown'
 
         color_palette = [BLUE, RED, GREEN, YELLOW, WHITE, ORANGE, TEAL, MAROON, PINK, GOLD]
         brand_colors = {brand: color_palette[i % len(color_palette)] for i, brand in enumerate(brands)}
 
-        # Get sorted data
+        
         sorted_averaged_scores = dict(sorted(averaged_scores.items(), key=operator.itemgetter(1)))
         sorted_scores = list(sorted_averaged_scores.values())
         sorted_scores.sort(reverse=True)
@@ -61,13 +58,13 @@ class Main(ThreeDScene):
                 if score == pair[1]:
                     sorted_brands.append(pair[0])
 
-        # Replace the same original brand with 'Unknown' in sorted list
+        
         for i, brand in enumerate(sorted_brands):
             if brand == original_brand_at_0:
                 sorted_brands[i] = 'Unknown'
                 break
 
-        # Store all as instance variables
+        
         self.brands = brands
         self.scores = scores
         self.sorted_brands = sorted_brands
@@ -75,15 +72,15 @@ class Main(ThreeDScene):
         self.brand_colors = brand_colors
         self.original_brand_at_0 = original_brand_at_0
 
-    def show_title(self):
-        """Show the presentation title"""
+    def showTitle(self):
+        
         presentation_title = TexText("Comparing Phone Reveiws to Date and Brand")
         self.play(Write(presentation_title))
         self.wait()
         self.play(FadeOut(presentation_title))
 
-    def part_1_bar_chart_analysis(self):
-        """Part 1: Bar chart showing average scores by brand with sorting animation"""
+    def part1BarChartAnalysis(self):
+        
         # Create title
         first_analysis_title = TexText("Average Score of Different Brands")
         first_analysis_title.to_edge(UP)
@@ -105,7 +102,7 @@ class Main(ThreeDScene):
             bar_colors=sorted_colors
         )
 
-        # Store initial state for rewinding
+        
         self.part1_initial_state = {
             'title': first_analysis_title.copy(),
             'chart': average_score_chart.copy(),
@@ -113,7 +110,7 @@ class Main(ThreeDScene):
             'frame_scale': self.frame.get_scale()
         }
 
-        # Animate
+        
         self.play(Write(first_analysis_title))
         self.wait()
         self.play(
@@ -125,7 +122,7 @@ class Main(ThreeDScene):
         )
         self.wait()
 
-        # Sorting animation
+        
         animations = []
         for i, sorted_brand in enumerate(self.sorted_brands):
             original_index = self.brands.index(sorted_brand)
@@ -144,7 +141,7 @@ class Main(ThreeDScene):
         self.play(*animations)
         self.wait()
 
-        # Store for cleanup
+        
         self.part1_objects = {
             'title': first_analysis_title,
             'chart': average_score_chart
@@ -152,30 +149,14 @@ class Main(ThreeDScene):
 
         self.play(FadeOut(average_score_chart), FadeOut(first_analysis_title))
 
-    def rewind_to_part_1(self):
-        """Rewind back to the beginning of part 1"""
-        # Clear current objects
-        self.clear()
-
-        # Reset frame
-        self.frame.set_euler_angles(*self.part1_initial_state['frame_angle'])
-        self.frame.set_scale(self.part1_initial_state['frame_scale'])
-
-        # Show initial state
-        self.add(self.part1_initial_state['title'])
-        self.add(self.part1_initial_state['chart'])
-        self.wait()
-
-    def part_2_time_series_analysis(self):
-        """Part 2: Time series analysis with 3D animation"""
-        # Create titles
+    def part2TimeSeriesAnalysis(self):
+        
         time_series_first_title = TexText("Average Review Score Over Time (Samsung)")
         time_series_first_title.to_edge(UP)
 
         time_series_second_title = TexText("Average Review Score Over Time (All Brands at once)")
         time_series_second_title.to_edge(UP)
 
-        # Create mapping from display names to original data keys
         brand_name_mapping = {}
         for i, brand in enumerate(self.brands):
             if brand == 'Unknown' and i == 0:
@@ -183,15 +164,15 @@ class Main(ThreeDScene):
             else:
                 brand_name_mapping[brand] = brand
 
-        # Create time series charts for all brands
         review_over_time_graphs = {}
         chart_lines = VGroup()
         for brand in self.brands:
-            # Use original brand name for data lookup
+            
             data_brand = brand_name_mapping[brand]
             time_data = getAverageReviewsByTimePeriod(self.data, data_brand)
             times = list(time_data.keys())
             average_scores = list(time_data.values())
+
             if brand == "Samsung":
                 review_timeline = cm.LineChart(
                     times,
@@ -214,7 +195,6 @@ class Main(ThreeDScene):
 
             review_over_time_graphs[brand] = review_timeline
 
-        # Store initial state for rewinding
         self.part2_initial_state = {
             'title': time_series_first_title.copy(),
             'graphs': {brand: graph.copy() for brand, graph in review_over_time_graphs.items()},
@@ -222,7 +202,6 @@ class Main(ThreeDScene):
             'frame_scale': self.frame.get_scale()
         }
 
-        # Animate the Samsung time series chart
         self.play(Write(time_series_first_title))
         self.wait()
         self.play(
@@ -235,13 +214,11 @@ class Main(ThreeDScene):
         self.play(ShowCreation(review_over_time_graphs["Samsung"].line))
         self.wait()
 
-        # Create and position the key/legend
         legend = cm.Key(self.brands, self.brand_colors)
         legend.to_edge(RIGHT, buff=0.5)
         legend.scale(0.7)
         legend.shift(DOWN*0.7)
 
-        # Show all brand lines
         creation_animations = []
         for brand in self.brands:
             if brand != "Samsung":
@@ -254,11 +231,10 @@ class Main(ThreeDScene):
         )
         self.wait()
 
-        # Animate positioning each graph at different depths in 3D space
         depth_spacing = 0.5
         shift_animations = []
         for i, brand in enumerate(self.brands):
-            # Calculate Z position for each graph
+            
             z_position = i * depth_spacing - (len(self.brands) - 1) * depth_spacing / 2
             shift_animations.append(
                 review_over_time_graphs[brand].animate.shift(OUT * z_position)
@@ -271,7 +247,6 @@ class Main(ThreeDScene):
         )
         self.wait()
 
-        # Return to 2D view
         return_animations = []
         for i, brand in enumerate(self.brands):
             z_position = i * depth_spacing - (len(self.brands) - 1) * depth_spacing / 2
@@ -286,7 +261,6 @@ class Main(ThreeDScene):
         )
         self.wait()
 
-        # Create the average line for all brands
         all_time_data = getAverageReviewsByTimePeriod(self.data)
         times = list(all_time_data.keys())
         scores = list(all_time_data.values())
@@ -302,7 +276,6 @@ class Main(ThreeDScene):
         )
         self.wait()
 
-        # Merge all lines to average
         removal_animations = []
         for brand in self.brands:
             line = review_over_time_graphs[brand].line
@@ -318,7 +291,6 @@ class Main(ThreeDScene):
         self.play(*removal_animations, ShowCreation(average_line_chart.line), run_time=3)
         self.wait()
 
-        # Cleanup
         self.play(
             Uncreate(average_line_chart.line),
             Uncreate(merge_title),
@@ -327,35 +299,6 @@ class Main(ThreeDScene):
             FadeOut(review_over_time_graphs['Samsung'].y_axis_labels),
             FadeOut(review_over_time_graphs['Samsung'].x_axis_labels),
         )
-
-    def rewind_to_part_2(self):
-        """Rewind back to the beginning of part 2"""
-        # Clear current objects
-        self.clear()
-
-        # Reset frame
-        self.frame.set_euler_angles(*self.part2_initial_state['frame_angle'])
-        self.frame.set_scale(self.part2_initial_state['frame_scale'])
-
-        # Show initial state
-        self.add(self.part2_initial_state['title'])
-        for brand, graph in self.part2_initial_state['graphs'].items():
-            self.add(graph)
-        self.wait()
-
-    def on_mouse_press(self, point, button, modifiers):
-        print('Click')
-        return super().on_mouse_press(point, button, modifiers)
-    def on_key_release(self, symbol, modifiers):
-        if symbol == 1:
-            print('1')
-            self.rewind_to_part_1()
-            self.part_1_bar_chart_analysis()
-        elif symbol == 2:
-            print('2')
-            self.rewind_to_part_2()
-            self.part_2_time_series_analysis()
-        return super().on_key_release(symbol, modifiers)
 
 def getPopulationMean(data):
     mean = []
@@ -392,11 +335,10 @@ def getAverageReviewsByTimePeriod(data, brand=None):
             for review in data[brand_name][product]:
                 score = int(review[0])
                 date_str = review[1]
-
-            
+     
                 try:
                     date_obj = datetime.datetime.strptime(date_str, "%B %d, %Y")
-                    period = date_obj.strftime("%Y-%m")  # Group by year-month
+                    period = date_obj.strftime("%Y-%m") 
 
                     if period not in reviews_by_date:
                         reviews_by_date[period] = []
@@ -405,7 +347,6 @@ def getAverageReviewsByTimePeriod(data, brand=None):
     
                     continue
 
-    # Calculate averages
     averages_over_time = {}
     for period, scores in sorted(reviews_by_date.items()):
         averages_over_time[period] = round(sum(scores) / len(scores), 3)

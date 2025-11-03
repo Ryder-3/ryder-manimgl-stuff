@@ -2,13 +2,13 @@ from manimlib import *
 
 class BarGraph(VGroup):
 
-
     def __init__(self, values, bar_names=None, y_range=[0, 1, 1], width=12, height=5, bar_colors=None, **kwargs):
         VGroup.__init__(self, **kwargs)
         self.values = list(values)
         self.bar_names = list(bar_names) if bar_names is not None else [str(i) for i in range(len(values))]
         self.bar_colors = bar_colors
         y_min, y_max, y_step = y_range
+
         if len(self.values) == 0:
             return
 
@@ -16,14 +16,12 @@ class BarGraph(VGroup):
         bar_slot = total_width / len(self.values)
         bar_width = bar_slot * 0.6
 
-
         default_colors = [BLUE, RED, GREEN, YELLOW, PURPLE, ORANGE, TEAL, MAROON, PINK, GOLD]
 
         bars = VGroup()
         labels = VGroup()
         value_labels = VGroup()
 
-  
         y_axis = Line(
             start=np.array([-total_width / 2 - 0.5, -height / 2, 0]),
             end=np.array([-total_width / 2 - 0.5, height / 2, 0]),
@@ -33,11 +31,11 @@ class BarGraph(VGroup):
 
         y_axis_labels = VGroup()
         num_ticks = int((y_max - y_min) / y_step) + 1
+
         for i in range(num_ticks):
             tick_value = y_min + i * y_step
             tick_y = -height / 2 + (i * y_step / (y_max - y_min)) * height
 
-            
             tick = Line(
                 start=np.array([-total_width / 2 - 0.5, tick_y, 0]),
                 end=np.array([-total_width / 2 - 0.3, tick_y, 0]),
@@ -57,7 +55,6 @@ class BarGraph(VGroup):
             if (y_max - y_min) != 0:
                 height_scaled = (val - y_min) / (y_max - y_min) * height
 
-
             if self.bar_colors and i < len(self.bar_colors):
                 color = self.bar_colors[i]
             else:
@@ -72,7 +69,6 @@ class BarGraph(VGroup):
             name.next_to(bar, DOWN, buff=0.1)
             labels.add(name)
 
-           
             if isinstance(val, float):
                 val_str = f"{val:.3f}"  
             else:
@@ -107,7 +103,6 @@ class Key(VGroup):
             name = TexText(brand).scale(0.4)
             name.next_to(color_box, RIGHT, buff=0.2)
 
-
             row = VGroup(color_box, name)
             if i <= (len(brands) / 2):
                 rows_1.add(row)
@@ -136,7 +131,6 @@ class LineChart(VGroup):
         total_width = width
         num_points = len(self.values)
 
-
         if show_axes == True:
             
             y_axis = Line(
@@ -146,7 +140,6 @@ class LineChart(VGroup):
                 stroke_width=2
             )
 
-          
             x_axis = Line(
                 start=np.array([-total_width / 2 - 0.5, -height / 2, 0]),
                 end=np.array([total_width / 2, -height / 2, 0]),
@@ -154,14 +147,13 @@ class LineChart(VGroup):
                 stroke_width=2
             )
 
-    
             y_axis_labels = VGroup()
             num_ticks = int((y_max - y_min) / y_step) + 1
+
             for i in range(num_ticks):
                 tick_value = y_min + i * y_step
                 tick_y = -height / 2 + (i * y_step / (y_max - y_min)) * height
 
-        
                 tick = Line(
                     start=np.array([-total_width / 2 - 0.5, tick_y, 0]),
                     end=np.array([-total_width / 2 - 0.3, tick_y, 0]),
@@ -170,14 +162,13 @@ class LineChart(VGroup):
                 )
                 y_axis_labels.add(tick)
 
-      
                 tick_label = TexText(str(tick_value)).scale(0.4)
                 tick_label.next_to(tick, LEFT, buff=0.1)
                 y_axis_labels.add(tick_label)
 
-        
             x_axis_labels = VGroup()
             label_frequency = max(1, num_points // 10)
+
             for i in range(0, num_points, label_frequency):
                 x_pos = -total_width / 2 + (i / (num_points - 1)) * total_width
                 tick = Line(
@@ -188,7 +179,6 @@ class LineChart(VGroup):
                 )
                 x_axis_labels.add(tick)
 
- 
                 time_label = TexText(self.times[i]).scale(0.35)
                 time_label.next_to(tick, DOWN, buff=0.1)
                 time_label.rotate(-45 * DEGREES) 
@@ -198,13 +188,14 @@ class LineChart(VGroup):
             self.y_axis_labels = y_axis_labels
             self.x_axis_labels = x_axis_labels
 
-      
         points = []
         dots = VGroup()
+
         for i, val in enumerate(self.values):
 
             x_pos = -total_width / 2 + (i / (num_points - 1)) * total_width
             height_scaled = 0
+
             if (y_max - y_min) != 0:
                 height_scaled = (val - y_min) / (y_max - y_min) * height
             y_pos = -height / 2 + height_scaled
@@ -215,7 +206,6 @@ class LineChart(VGroup):
             dot = Dot(point, color=self.line_color, radius=0.06)
             dots.add(dot)
 
-
         if len(points) > 1:
             line = VMobject(color=self.line_color, stroke_width=3)
             line.set_points_as_corners(points)
@@ -224,6 +214,7 @@ class LineChart(VGroup):
 
         self.line = line
         self.dots = dots
+        
         if show_axes == True:
             self.add(y_axis, x_axis, y_axis_labels, x_axis_labels, line)
         else:
