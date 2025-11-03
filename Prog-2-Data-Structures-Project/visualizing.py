@@ -2,239 +2,16 @@ from manimlib import *
 import json
 import csv
 import operator
-import numpy as np
+import sys
+from pathlib import Path
+
+# Add parent directory to Python path to import customMobject
+sys.path.insert(0, str(Path(__file__).parent.parent))
+import customMobject as cm
+
 import datetime
 
 PROJECT_PATH = r".\Prog-2-Data-Structures-Project"
-
-
-class LineChart(VGroup):
-
-    def __init__(self, times, values, y_range=[0, 5, 1], width=12, height=5, line_color=BLUE, show_axes=True, **kwargs):
-        VGroup.__init__(self, **kwargs)
-        self.times = list(times)
-        self.values = list(values)
-        self.line_color = line_color
-        y_min, y_max, y_step = y_range
-
-        if len(self.values) == 0:
-            return
-
-        total_width = width
-        num_points = len(self.values)
-
-
-        if show_axes == True:
-            
-            y_axis = Line(
-                start=np.array([-total_width / 2 - 0.5, -height / 2, 0]),
-                end=np.array([-total_width / 2 - 0.5, height / 2, 0]),
-                color=WHITE,
-                stroke_width=2
-            )
-
-          
-            x_axis = Line(
-                start=np.array([-total_width / 2 - 0.5, -height / 2, 0]),
-                end=np.array([total_width / 2, -height / 2, 0]),
-                color=WHITE,
-                stroke_width=2
-            )
-
-    
-            y_axis_labels = VGroup()
-            num_ticks = int((y_max - y_min) / y_step) + 1
-            for i in range(num_ticks):
-                tick_value = y_min + i * y_step
-                tick_y = -height / 2 + (i * y_step / (y_max - y_min)) * height
-
-        
-                tick = Line(
-                    start=np.array([-total_width / 2 - 0.5, tick_y, 0]),
-                    end=np.array([-total_width / 2 - 0.3, tick_y, 0]),
-                    color=WHITE,
-                    stroke_width=2
-                )
-                y_axis_labels.add(tick)
-
-      
-                tick_label = TexText(str(tick_value)).scale(0.4)
-                tick_label.next_to(tick, LEFT, buff=0.1)
-                y_axis_labels.add(tick_label)
-
-        
-            x_axis_labels = VGroup()
-            label_frequency = max(1, num_points // 10)
-            for i in range(0, num_points, label_frequency):
-                x_pos = -total_width / 2 + (i / (num_points - 1)) * total_width
-                tick = Line(
-                    start=np.array([x_pos, -height / 2, 0]),
-                    end=np.array([x_pos, -height / 2 - 0.2, 0]),
-                    color=WHITE,
-                    stroke_width=2
-                )
-                x_axis_labels.add(tick)
-
- 
-                time_label = TexText(self.times[i]).scale(0.35)
-                time_label.next_to(tick, DOWN, buff=0.1)
-                time_label.rotate(-45 * DEGREES) 
-                x_axis_labels.add(time_label)
-            self.y_axis = y_axis
-            self.x_axis = x_axis
-            self.y_axis_labels = y_axis_labels
-            self.x_axis_labels = x_axis_labels
-
-      
-        points = []
-        dots = VGroup()
-        for i, val in enumerate(self.values):
-
-            x_pos = -total_width / 2 + (i / (num_points - 1)) * total_width
-            height_scaled = 0
-            if (y_max - y_min) != 0:
-                height_scaled = (val - y_min) / (y_max - y_min) * height
-            y_pos = -height / 2 + height_scaled
-
-            point = np.array([x_pos, y_pos, 0])
-            points.append(point)
-
-            dot = Dot(point, color=self.line_color, radius=0.06)
-            dots.add(dot)
-
-
-        if len(points) > 1:
-            line = VMobject(color=self.line_color, stroke_width=3)
-            line.set_points_as_corners(points)
-        else:
-            line = VGroup()
-
-        self.line = line
-        self.dots = dots
-        if show_axes == True:
-            self.add(y_axis, x_axis, y_axis_labels, x_axis_labels, line)
-        else:
-            self.add(line)
-
-class Key(VGroup):
-    def __init__(self, brands, brand_colors, **kwargs):
-        VGroup.__init__(self, **kwargs)
-        rows_1 = VGroup()
-        rows_2 = VGroup()
-        color_box_size = 0.3
-        spacing = 0.4
-
-        for i, brand in enumerate(brands):
-            color = brand_colors[brand]
-
-            color_box = Square(side_length=color_box_size, fill_color=color, fill_opacity=0.8, stroke_color=WHITE, stroke_width=2)
- 
-            name = TexText(brand).scale(0.4)
-            name.next_to(color_box, RIGHT, buff=0.2)
-
-
-            row = VGroup(color_box, name)
-            if i <= 4:
-                rows_1.add(row)
-            else:
-                rows_2.add(row)
-
-        # Arrange all rows vertically
-        rows_1.arrange(DOWN, aligned_edge=LEFT, buff=spacing)
-        rows_2.arrange(DOWN, aligned_edge=LEFT, buff=spacing)
-        rows_2.next_to(rows_1, RIGHT, buff=1.0)
-
-        self.add(rows_1,rows_2)
-
-class BarChart(VGroup):
-
-    def __init__(self, values, bar_names=None, y_range=[0, 1, 1], width=12, height=5, bar_colors=None, **kwargs):
-        VGroup.__init__(self, **kwargs)
-        self.values = list(values)
-        self.bar_names = list(bar_names) if bar_names is not None else [str(i) for i in range(len(values))]
-        self.bar_colors = bar_colors
-        y_min, y_max, y_step = y_range
-        if len(self.values) == 0:
-            return
-
-        total_width = width
-        bar_slot = total_width / len(self.values)
-        bar_width = bar_slot * 0.6
-
-
-        default_colors = [BLUE, RED, GREEN, YELLOW, PURPLE, ORANGE, TEAL, MAROON, PINK, GOLD]
-
-        bars = VGroup()
-        labels = VGroup()
-        value_labels = VGroup()
-
-  
-        y_axis = Line(
-            start=np.array([-total_width / 2 - 0.5, -height / 2, 0]),
-            end=np.array([-total_width / 2 - 0.5, height / 2, 0]),
-            color=WHITE,
-            stroke_width=2
-        )
-
-        y_axis_labels = VGroup()
-        num_ticks = int((y_max - y_min) / y_step) + 1
-        for i in range(num_ticks):
-            tick_value = y_min + i * y_step
-            tick_y = -height / 2 + (i * y_step / (y_max - y_min)) * height
-
-            
-            tick = Line(
-                start=np.array([-total_width / 2 - 0.5, tick_y, 0]),
-                end=np.array([-total_width / 2 - 0.3, tick_y, 0]),
-                color=WHITE,
-                stroke_width=2
-            )
-            y_axis_labels.add(tick)
-
-            # Tick label
-            tick_label = TexText(str(tick_value)).scale(0.4)
-            tick_label.next_to(tick, LEFT, buff=0.1)
-            y_axis_labels.add(tick_label)
-
-        for i, val in enumerate(self.values):
-
-            height_scaled = 0
-            if (y_max - y_min) != 0:
-                height_scaled = (val - y_min) / (y_max - y_min) * height
-
-
-            if self.bar_colors and i < len(self.bar_colors):
-                color = self.bar_colors[i]
-            else:
-                color = default_colors[i % len(default_colors)]
-
-            bar = Rectangle(width=bar_width, height=height_scaled, fill_color=color, fill_opacity=0.8, stroke_width=2, stroke_color=WHITE)
-            x = (-total_width / 2) + (bar_slot * i) + (bar_slot / 2)
-            bar.move_to(np.array([x, -height / 2 + height_scaled / 2, 0]))
-            bars.add(bar)
-
-            name = TexText(str(self.bar_names[i])).scale(0.5)
-            name.next_to(bar, DOWN, buff=0.1)
-            labels.add(name)
-
-           
-            if isinstance(val, float):
-                val_str = f"{val:.3f}"  
-            else:
-                val_str = str(val)
-            vlabel = TexText(val_str).scale(0.5)
-            vlabel.next_to(bar, UP, buff=0.15)
-            value_labels.add(vlabel)
-
-        self.bars = bars
-        self.labels = labels
-        self.value_labels = value_labels
-        self.y_axis = y_axis
-        self.y_axis_labels = y_axis_labels
-        self.add(bars, labels, value_labels, y_axis, y_axis_labels)
-
-    def get_bar_labels(self):
-        return self.value_labels
 
 class Main(ThreeDScene):
     def construct(self):
@@ -243,52 +20,38 @@ class Main(ThreeDScene):
             data = json.load(formatted_json)
         self.frame.set_euler_angles(0,0,0)
 
-        
+        # Store data as instance variables for easy access
+        self.data = data
+        self.setup_data()
+
+        # Run presentation
+        self.show_title()
+        self.part_1_bar_chart_analysis()
+        self.part_2_time_series_analysis()
+        self.embed()
+
+    def setup_data(self):
+        """Setup all data structures needed for the presentation"""
         averaged_scores = {}
-        for brand in data:
+        for brand in self.data:
             if brand != 'brand':
-                average_score = getAverageReviewScore(brand, data)
+                average_score = getAverageReviewScore(brand, self.data)
                 averaged_scores[brand] = average_score
 
-        presentation_title = TexText("Comparing Phone Reveiws to Date and Brand")
-
-
-        first_analysis_title = TexText("Average Score of Different Brands")
-        first_analysis_title.to_edge(UP)
-
-
-        # getting the data for the bars in the unsorted graph
-        brands = averaged_scores.keys()
-        scores = averaged_scores.values()
-
-
-        scores = list(scores)
-        brands = list(brands)
+        scores = list(averaged_scores.values())
+        brands = list(averaged_scores.keys())
 
         # Store original brand names before renaming
         original_brand_at_0 = brands[0]
         brands[0] = 'Unknown'
 
-
         color_palette = [BLUE, RED, GREEN, YELLOW, WHITE, ORANGE, TEAL, MAROON, PINK, GOLD]
         brand_colors = {brand: color_palette[i % len(color_palette)] for i, brand in enumerate(brands)}
-        colors = [brand_colors[brand] for brand in brands]
 
-        # making the unsorted graph
-        average_score_chart = BarChart(values=scores, bar_names=brands, y_range=[0,5,1], bar_colors=colors)
-
-
-        # getting the data for the sorted graph
-
+        # Get sorted data
         sorted_averaged_scores = dict(sorted(averaged_scores.items(), key=operator.itemgetter(1)))
-        sorted_scores = sorted_averaged_scores.values()
-
-            #sorting the brands and scores
-
-
-        sorted_scores = list(sorted_scores)
-        sorted_scores.sort()
-        sorted_scores.reverse()
+        sorted_scores = list(sorted_averaged_scores.values())
+        sorted_scores.sort(reverse=True)
 
         sorted_brands = []
         reference_items = averaged_scores.items()
@@ -299,57 +62,81 @@ class Main(ThreeDScene):
                     sorted_brands.append(pair[0])
 
         # Replace the same original brand with 'Unknown' in sorted list
-        # (it will be at a different index than in the unsorted list)
         for i, brand in enumerate(sorted_brands):
             if brand == original_brand_at_0:
                 sorted_brands[i] = 'Unknown'
                 break
 
+        # Store all as instance variables
+        self.brands = brands
+        self.scores = scores
+        self.sorted_brands = sorted_brands
+        self.sorted_scores = sorted_scores
+        self.brand_colors = brand_colors
+        self.original_brand_at_0 = original_brand_at_0
 
-        sorted_colors = [brand_colors[brand] for brand in sorted_brands]
-
-        # making the sorted bar graph
-        sorted_score_chart = BarChart(values=sorted_scores, bar_names=sorted_brands, y_range=[0,5,1], bar_colors=sorted_colors)
-
-
-        average_score = getPopulationMean(data)
-        
-
-
-        average_score_text = TexText("Average score of all phones: " + str(average_score))
-        average_score_text.to_edge(UP)
-        
-        
-
+    def show_title(self):
+        """Show the presentation title"""
+        presentation_title = TexText("Comparing Phone Reveiws to Date and Brand")
         self.play(Write(presentation_title))
         self.wait()
         self.play(FadeOut(presentation_title))
+
+    def part_1_bar_chart_analysis(self):
+        """Part 1: Bar chart showing average scores by brand with sorting animation"""
+        # Create title
+        first_analysis_title = TexText("Average Score of Different Brands")
+        first_analysis_title.to_edge(UP)
+
+        # Create charts
+        colors = [self.brand_colors[brand] for brand in self.brands]
+        average_score_chart = cm.BarGraph(
+            values=self.scores,
+            bar_names=self.brands,
+            y_range=[0,5,1],
+            bar_colors=colors
+        )
+
+        sorted_colors = [self.brand_colors[brand] for brand in self.sorted_brands]
+        sorted_score_chart = cm.BarGraph(
+            values=self.sorted_scores,
+            bar_names=self.sorted_brands,
+            y_range=[0,5,1],
+            bar_colors=sorted_colors
+        )
+
+        # Store initial state for rewinding
+        self.part1_initial_state = {
+            'title': first_analysis_title.copy(),
+            'chart': average_score_chart.copy(),
+            'frame_angle': self.frame.get_euler_angles(),
+            'frame_scale': self.frame.get_scale()
+        }
+
+        # Animate
         self.play(Write(first_analysis_title))
         self.wait()
-        self.play(ShowCreation(average_score_chart.bars),
-                  Write(average_score_chart.labels),
-                  Write(average_score_chart.value_labels),
-                  ShowCreation(average_score_chart.y_axis),
-                  FadeIn(average_score_chart.y_axis_labels))
+        self.play(
+            ShowCreation(average_score_chart.bars),
+            Write(average_score_chart.labels),
+            Write(average_score_chart.value_labels),
+            ShowCreation(average_score_chart.y_axis),
+            FadeIn(average_score_chart.y_axis_labels)
+        )
         self.wait()
 
-        
+        # Sorting animation
         animations = []
-        for i, sorted_brand in enumerate(sorted_brands):
-            
-            original_index = brands.index(sorted_brand)
-
-    
+        for i, sorted_brand in enumerate(self.sorted_brands):
+            original_index = self.brands.index(sorted_brand)
             original_bar = average_score_chart.bars[original_index]
             original_label = average_score_chart.labels[original_index]
             original_value = average_score_chart.value_labels[original_index]
 
-            
             target_bar = sorted_score_chart.bars[i]
             target_label = sorted_score_chart.labels[i]
             target_value = sorted_score_chart.value_labels[i]
 
-            
             animations.append(original_bar.animate.move_to(target_bar.get_center()))
             animations.append(original_label.animate.move_to(target_label.get_center()))
             animations.append(original_value.animate.move_to(target_value.get_center()))
@@ -357,53 +144,67 @@ class Main(ThreeDScene):
         self.play(*animations)
         self.wait()
 
-
-        # Part 2
-        # Graphing reviews over time
-
-    
-
+        # Store for cleanup
+        self.part1_objects = {
+            'title': first_analysis_title,
+            'chart': average_score_chart
+        }
 
         self.play(FadeOut(average_score_chart), FadeOut(first_analysis_title))
-        
 
-        # Create title for time series
+    def rewind_to_part_1(self):
+        """Rewind back to the beginning of part 1"""
+        # Clear current objects
+        self.clear()
+
+        # Reset frame
+        self.frame.set_euler_angles(*self.part1_initial_state['frame_angle'])
+        self.frame.set_scale(self.part1_initial_state['frame_scale'])
+
+        # Show initial state
+        self.add(self.part1_initial_state['title'])
+        self.add(self.part1_initial_state['chart'])
+        self.wait()
+
+    def part_2_time_series_analysis(self):
+        """Part 2: Time series analysis with 3D animation"""
+        # Create titles
         time_series_first_title = TexText("Average Review Score Over Time (Samsung)")
         time_series_first_title.to_edge(UP)
 
         time_series_second_title = TexText("Average Review Score Over Time (All Brands at once)")
         time_series_second_title.to_edge(UP)
 
-
         # Create mapping from display names to original data keys
         brand_name_mapping = {}
-        for i, brand in enumerate(brands):
+        for i, brand in enumerate(self.brands):
             if brand == 'Unknown' and i == 0:
-                brand_name_mapping['Unknown'] = original_brand_at_0
+                brand_name_mapping['Unknown'] = self.original_brand_at_0
             else:
                 brand_name_mapping[brand] = brand
 
+        # Create time series charts for all brands
         review_over_time_graphs = {}
         chart_lines = VGroup()
-        for brand in brands:
+        for brand in self.brands:
             # Use original brand name for data lookup
             data_brand = brand_name_mapping[brand]
-            time_data = getAverageReviewsByTimePeriod(data, data_brand)
+            time_data = getAverageReviewsByTimePeriod(self.data, data_brand)
             times = list(time_data.keys())
             average_scores = list(time_data.values())
             if brand == "Samsung":
-                review_timeline = LineChart(
+                review_timeline = cm.LineChart(
                     times,
                     average_scores,
                     [0,5,1],
-                    line_color = brand_colors[brand]
+                    line_color=self.brand_colors[brand]
                 )
             else:
-                review_timeline = LineChart(
+                review_timeline = cm.LineChart(
                     times,
                     average_scores,
                     [0,5,1],
-                    line_color = brand_colors[brand],
+                    line_color=self.brand_colors[brand],
                     show_axes=False
                 )
             try:
@@ -413,33 +214,36 @@ class Main(ThreeDScene):
 
             review_over_time_graphs[brand] = review_timeline
 
+        # Store initial state for rewinding
+        self.part2_initial_state = {
+            'title': time_series_first_title.copy(),
+            'graphs': {brand: graph.copy() for brand, graph in review_over_time_graphs.items()},
+            'frame_angle': self.frame.get_euler_angles(),
+            'frame_scale': self.frame.get_scale()
+        }
 
-
-        # Animate the time series chart
-        self.play(
-            Write(time_series_first_title)
-        )
+        # Animate the Samsung time series chart
+        self.play(Write(time_series_first_title))
         self.wait()
         self.play(
             ShowCreation(review_over_time_graphs["Samsung"].y_axis),
             ShowCreation(review_over_time_graphs["Samsung"].x_axis),
             FadeIn(review_over_time_graphs["Samsung"].y_axis_labels),
             FadeIn(review_over_time_graphs["Samsung"].x_axis_labels),
-            
         )
         self.wait()
-        self.play(
-            ShowCreation(review_over_time_graphs["Samsung"].line),
-        )
+        self.play(ShowCreation(review_over_time_graphs["Samsung"].line))
         self.wait()
+
         # Create and position the key/legend
-        legend = Key(brands, brand_colors)
+        legend = cm.Key(self.brands, self.brand_colors)
         legend.to_edge(RIGHT, buff=0.5)
         legend.scale(0.7)
         legend.shift(DOWN*0.7)
 
+        # Show all brand lines
         creation_animations = []
-        for brand in brands:
+        for brand in self.brands:
             if brand != "Samsung":
                 creation_animations.append(ShowCreation(review_over_time_graphs[brand].line))
 
@@ -450,18 +254,16 @@ class Main(ThreeDScene):
         )
         self.wait()
 
-
         # Animate positioning each graph at different depths in 3D space
-        depth_spacing = 0.5  
+        depth_spacing = 0.5
         shift_animations = []
-        for i, brand in enumerate(brands):
+        for i, brand in enumerate(self.brands):
             # Calculate Z position for each graph
-            z_position = i * depth_spacing - (len(brands) - 1) * depth_spacing / 2
+            z_position = i * depth_spacing - (len(self.brands) - 1) * depth_spacing / 2
             shift_animations.append(
                 review_over_time_graphs[brand].animate.shift(OUT * z_position)
             )
 
-        
         self.play(
             *shift_animations,
             self.frame.animate.set_euler_angles(80*DEGREES,-70*DEGREES,-85*DEGREES).scale(1.5),
@@ -469,10 +271,10 @@ class Main(ThreeDScene):
         )
         self.wait()
 
-
+        # Return to 2D view
         return_animations = []
-        for i, brand in enumerate(brands):
-            z_position = i * depth_spacing - (len(brands) - 1) * depth_spacing / 2
+        for i, brand in enumerate(self.brands):
+            z_position = i * depth_spacing - (len(self.brands) - 1) * depth_spacing / 2
             return_animations.append(
                 review_over_time_graphs[brand].animate.shift(OUT * -z_position)
             )
@@ -485,12 +287,11 @@ class Main(ThreeDScene):
         self.wait()
 
         # Create the average line for all brands
-        all_time_data = getAverageReviewsByTimePeriod(data)
+        all_time_data = getAverageReviewsByTimePeriod(self.data)
         times = list(all_time_data.keys())
         scores = list(all_time_data.values())
-        average_line_chart = LineChart(times, scores, [0,5,1], line_color=WHITE, show_axes=False)
+        average_line_chart = cm.LineChart(times, scores, [0,5,1], line_color=WHITE, show_axes=False)
 
-    
         merge_title = TexText("All Brands Merge to Overall Average")
         merge_title.to_edge(UP)
 
@@ -501,8 +302,9 @@ class Main(ThreeDScene):
         )
         self.wait()
 
+        # Merge all lines to average
         removal_animations = []
-        for brand in brands:
+        for brand in self.brands:
             line = review_over_time_graphs[brand].line
             removal_animations.append(
                 ShowPassingFlash(
@@ -513,16 +315,47 @@ class Main(ThreeDScene):
             )
             removal_animations.append(FadeOut(line))
 
-        self.play(*removal_animations, ShowCreation(average_line_chart.line), run_time = 3)
+        self.play(*removal_animations, ShowCreation(average_line_chart.line), run_time=3)
         self.wait()
-        
 
+        # Cleanup
+        self.play(
+            Uncreate(average_line_chart.line),
+            Uncreate(merge_title),
+            Uncreate(review_over_time_graphs['Samsung'].y_axis),
+            Uncreate(review_over_time_graphs['Samsung'].x_axis),
+            FadeOut(review_over_time_graphs['Samsung'].y_axis_labels),
+            FadeOut(review_over_time_graphs['Samsung'].x_axis_labels),
+        )
 
+    def rewind_to_part_2(self):
+        """Rewind back to the beginning of part 2"""
+        # Clear current objects
+        self.clear()
 
-        
+        # Reset frame
+        self.frame.set_euler_angles(*self.part2_initial_state['frame_angle'])
+        self.frame.set_scale(self.part2_initial_state['frame_scale'])
+
+        # Show initial state
+        self.add(self.part2_initial_state['title'])
+        for brand, graph in self.part2_initial_state['graphs'].items():
+            self.add(graph)
+        self.wait()
+
     def on_mouse_press(self, point, button, modifiers):
         print('Click')
         return super().on_mouse_press(point, button, modifiers)
+    def on_key_release(self, symbol, modifiers):
+        if symbol == 1:
+            print('1')
+            self.rewind_to_part_1()
+            self.part_1_bar_chart_analysis()
+        elif symbol == 2:
+            print('2')
+            self.rewind_to_part_2()
+            self.part_2_time_series_analysis()
+        return super().on_key_release(symbol, modifiers)
 
 def getPopulationMean(data):
     mean = []
@@ -613,11 +446,4 @@ def formating():
                        
             with open(fr'{PROJECT_PATH}\formatted.json', 'w') as formmated_json:
                 json.dump(to_json, formmated_json, indent=4)
-        
-        
-
-if __name__ == '__main__':
-    with open(fr"{PROJECT_PATH}\formatted.json", 'r') as formatted_json:
-        data = json.load(formatted_json)
-
-    population_mean = getPopulationMean(data)
+          
