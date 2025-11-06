@@ -299,6 +299,7 @@ class Main(ThreeDScene):
             FadeOut(review_over_time_graphs['Samsung'].y_axis_labels),
             FadeOut(review_over_time_graphs['Samsung'].x_axis_labels),
         )
+        self.embed()
 
 def getPopulationMean(data):
     mean = []
