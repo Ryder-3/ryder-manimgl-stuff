@@ -301,18 +301,6 @@ class Main(ThreeDScene):
         )
         self.embed()
 
-def getPopulationMean(data):
-    mean = []
-    for brand in data:
-        if brand != 'brand':
-            for product in data[brand]:
-                for review in data[brand][product]:
-                    score = review[0]
-                    mean.append(int(score))
-    mean = sum(mean) / len(mean)
-    mean = round(mean, 3)
-    return mean
-
 def getAverageReviewScore(brand, data):
     temp_scores = []
     for product in data[brand]:
@@ -327,9 +315,11 @@ def getAverageReviewsByTimePeriod(data, brand=None):
     reviews_by_date = {}
 
     for brand_name in data:
+
+        # Handling the first row and the 
         if brand_name == 'brand':
             continue
-        if brand is not None and brand_name != brand:
+        if brand != None and brand_name != brand:
             continue
 
         for product in data[brand_name]:
