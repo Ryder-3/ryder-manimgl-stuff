@@ -8,7 +8,6 @@ from pathlib import Path
 # Add parent directory to Python path to import customMobject
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import customMobject as cm
-
 import datetime
 
 PROJECT_PATH = r".\Prog-2-Data-Structures-Project"
@@ -343,6 +342,8 @@ def getAverageReviewsByTimePeriod(data, brand=None):
         averages_over_time[period] = round(sum(scores) / len(scores), 3)
 
     return averages_over_time
+
+
 
 def formating():
     with open(fr'{PROJECT_PATH}\20191226-items.csv', 'r', encoding='utf-8') as item_csv:
