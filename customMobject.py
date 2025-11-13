@@ -1,4 +1,6 @@
+from __future__ import annotations
 from manimlib import *
+import numpy as np
 
 class BarGraph(VGroup):
 
@@ -220,4 +222,41 @@ class LineChart(VGroup):
         else:
             self.add(line)
 
-#next
+class Icosohedron(VGroup3D):
+    def __init__(self,
+        fill_color = BLUE_E,
+        fill_opacity: float = 1,
+        stroke_color = BLUE_E,
+        stroke_width: float = 1,
+        shading: Tuple[float, float, float] = (0.2, 0.2, 0.2),
+        **kwargs,
+    ):
+        style = dict(
+            fill_color=fill_color,
+            fill_opacity=fill_opacity,
+            stroke_color=stroke_color,
+            stroke_width=stroke_width,
+            shading=shading,
+            **kwargs
+        )
+
+        # One can make an Icosohedron by making three "golden rectangles"
+
+        golden_ratio = (1 + np.sqrt(5))/2
+
+        rectangle_1 = Rectangle(width = golden_ratio, height = 1)
+
+        rectangle_2 = Rectangle(width = golden_ratio, height = 1)
+        
+
+        rectangle_3 = Rectangle(width = golden_ratio, height = 1)
+
+        self.add(rectangle_1)
+
+        
+
+class ThreeDTesting(ThreeDScene):
+    def construct(self):
+        grid = FunctionGraph(lambda p: 1)
+        self.add(grid)
+        self.embed()
