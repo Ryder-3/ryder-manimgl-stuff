@@ -224,39 +224,80 @@ class LineChart(VGroup):
 
 class Icosohedron(VGroup3D):
     def __init__(self,
-        fill_color = BLUE_E,
-        fill_opacity: float = 1,
-        stroke_color = BLUE_E,
-        stroke_width: float = 1,
-        shading: Tuple[float, float, float] = (0.2, 0.2, 0.2),
+        color=BLUE,
+        size=1,
         **kwargs,
     ):
-        style = dict(
-            fill_color=fill_color,
-            fill_opacity=fill_opacity,
-            stroke_color=stroke_color,
-            stroke_width=stroke_width,
-            shading=shading,
-            **kwargs
-        )
-
         # One can make an Icosohedron by making three "golden rectangles"
+        # (rectangles with height = 1 and width = golden ratio),
+        # rotating each so their short sides are all on different planes,
+        # then conecting the corners that are all 1 unit away.
+
+        # we can scale this by scaling the size of the rectangles and the
+        # distence condition for coneecting them by the desired scalar
 
         golden_ratio = (1 + np.sqrt(5))/2
 
-        rectangle_1 = Rectangle(width = golden_ratio, height = 1)
 
-        rectangle_2 = Rectangle(width = golden_ratio, height = 1)
+        # Making all three rectangles and rotating them into place
+        rectangle_1 = Rectangle(width=golden_ratio,
+                                height=1,
+                                color=RED,
+                                fill_color=RED,
+                                fill_opacity=0.5,
+                                stroke_color=BLACK,
+                                )
         
 
-        rectangle_3 = Rectangle(width = golden_ratio, height = 1)
+        rectangle_2 = Rectangle(width=1,
+                                height=golden_ratio,
+                                color=GREEN,
+                                fill_color=GREEN,
+                                fill_opacity=0.5,
+                                stroke_color=BLACK,
+                                )
+        rectangle_2.rotate(90*DEGREES, Y_AXIS)
 
-        self.add(rectangle_1)
+
+        rectangle_3 = Rectangle(width=1,
+                                height=golden_ratio,
+                                color=BLUE,
+                                fill_color=BLUE,
+                                fill_opacity=0.5,
+                                stroke_color=BLACK,
+                                )
+        rectangle_3.rotate(90*DEGREES, X_AXIS)
+
+        rectangles = VGroup()
+        rectangles.add(rectangle_1,
+                       rectangle_2,
+                       rectangle_3,
+                       )
+        
+        corner_positions = []
+        for rectangle in rectangles:
+
+            corners = rectangle.get_all_corners()   
+            corners = corners.tolist()
+            
+            #each corner shows up twice for some reason, this is trying to get around that
+            for i, corner in enumerate(corners):
+                if i % 2 == 0:
+                    corner_positions.append(corner)
+
+        # All of the corners are now in a list, we now need to make the actual faces
+
+        
+        
+    
+
+        self.corner_positions = corner_positions
+        self.rectangles = rectangles
 
         
 
 class ThreeDTesting(ThreeDScene):
     def construct(self):
-        grid = FunctionGraph(lambda p: 1)
-        self.add(grid)
+        test = Icosohedron()
+        self.add(test.rectangles)
         self.embed()
