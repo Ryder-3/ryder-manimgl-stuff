@@ -223,8 +223,13 @@ class LineChart(VGroup):
             self.add(line)
 
 class Icosohedron(VGroup3D):
+
+    # TODO make this scalable if wanted
+    # TODO make option for fill color to be different from stroke color
+
     def __init__(self,
-        color=BLUE,
+        stroke_color=BLACK,
+        fill_color=BLUE,
         size=1,
         **kwargs,
     ):
@@ -287,7 +292,7 @@ class Icosohedron(VGroup3D):
 
         # All of the corners are now in a list, we now need to make the actual faces
 
-        
+
         
     
 
