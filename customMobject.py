@@ -249,7 +249,7 @@ class Icosohedron(VGroup3D):
                                 height=1,
                                 color=RED,
                                 fill_color=RED,
-                                fill_opacity=0.5,
+                                fill_opacity=0,
                                 stroke_color=BLACK,
                                 )
         
@@ -258,7 +258,7 @@ class Icosohedron(VGroup3D):
                                 height=golden_ratio,
                                 color=GREEN,
                                 fill_color=GREEN,
-                                fill_opacity=0.5,
+                                fill_opacity=0,
                                 stroke_color=BLACK,
                                 )
         rectangle_2.rotate(90*DEGREES, Y_AXIS)
@@ -268,7 +268,7 @@ class Icosohedron(VGroup3D):
                                 height=golden_ratio,
                                 color=BLUE,
                                 fill_color=BLUE,
-                                fill_opacity=0.5,
+                                fill_opacity=0,
                                 stroke_color=BLACK,
                                 )
         rectangle_3.rotate(90*DEGREES, X_AXIS)
@@ -278,6 +278,25 @@ class Icosohedron(VGroup3D):
                        rectangle_2,
                        rectangle_3,
                        )
+
+
+    # TODO: FIX THE DUPLICATION ERROR!!!! 
+        corner_points = VGroup()
+        for rectangle in rectangles:
+            corners = rectangle.
+            
+            
+            seen_corners = []
+            for corner in corners:
+                if corner not in seen_corners:
+                    seen_corners.append(corner)
+            corners = seen_corners
+            for corner in corners:
+                print(corner)
+
+            for corner in corners:
+                point = Dot((corner[0],corner[1],corner[2]))
+                corner_points.add(point)
         
         corner_positions = []
         for rectangle in rectangles:
@@ -285,24 +304,104 @@ class Icosohedron(VGroup3D):
             corners = rectangle.get_all_corners()   
             corners = corners.tolist()
             
-            #each corner shows up twice for some reason, this is trying to get around that
-            for i, corner in enumerate(corners):
-                if i % 2 == 0:
-                    corner_positions.append(corner)
+            seen_corners = []
+            for corner in corners:
+                if corner not in seen_corners:
+                    seen_corners.append(corner)
+            corners = seen_corners
 
         # All of the corners are now in a list, we now need to make the actual faces
+        # We'll make all of the posible equalateral triangles with side length 1, then get rid of all of them with duplicate centers
+        
+
+        '''
+        #TEST CODE
+        test_num = 1
+        for point_1 in corner_positions:
+            for point_2 in corner_positions:
+                for point_3 in corner_positions:
+                    print(f"Triangle set {test_num}")
+                    print(self.distenceFormula(point_1,point_2))
+                    print(self.distenceFormula(point_1,point_3))
+                    print(self.distenceFormula(point_2,point_3))
+                    print()
+                    test_num += 1
+
+        '''
+        
+        
+        # TODO: this is going to be a very slow process, try and find a way to speed it up
+        
+        triangle_points = []
+        error = 0.000001
+        for point_1 in corner_positions:
+            for point_2 in corner_positions:
+                for point_3 in corner_positions:
+                    if (self.distenceFormula(point_1,point_2) < 1 + error and
+                        self.distenceFormula(point_1, point_2) > 1 - error and
+                        self.distenceFormula(point_2, point_3) < 1 + error and
+                        self.distenceFormula(point_2, point_3) > 1 - error and
+                        self.distenceFormula(point_1,point_3) < 1 + error and
+                        self.distenceFormula(point_1, point_3) > 1 - error
+                    ):
+                        triangle_points.append([point_1,point_2,point_3])
+
+
+
+        # now we get rid of all duplicates
+        seen_triangle_centers = []
+        shortend_triangle_points = []
+        for triangle in triangle_points:
+            if self.getCenter(triangle) not in seen_triangle_centers:
+                seen_triangle_centers.append(self.getCenter(triangle))
+                shortend_triangle_points.append(triangle)
+        
 
 
         
-    
+        #TEST CODE
+        test_num = 1
 
+        for el in triangle_points:
+            print(f"triangle {test_num} points = {el}, center = {self.getCenter(el)}")
+            print()
+            test_num += 1
+    
+        
+        faces = VGroup()
+        for face in triangle_points:
+            poly = Polygon(
+                np.array([face[0][0],face[0][1],face[0][2]]),
+                np.array([face[1][0],face[1][1],face[1][2]]),
+                np.array([face[2][0],face[2][1],face[2][2]]),
+            )
+            faces.add(poly)
+        
+        self.verticies = corner_points
+        self.triangle_points = triangle_points
+        self.faces = faces
         self.corner_positions = corner_positions
         self.rectangles = rectangles
+
+    def distenceFormula(self, point_1, point_2):
+        return (np.sqrt(
+            ((point_1[0] - point_2[0]) ** 2) +
+            ((point_1[1] - point_2[1]) ** 2) +
+            ((point_1[2] - point_2[2]) ** 2)))
+    
+    def getCenter(self, points):
+        point_1, point_2, point_3 = points
+        center = [((point_1[0] + point_2[0] + point_3[0])/3), ((point_1[1] + point_2[1] + point_3[1])/3), ((point_1[2] + point_2[2] + point_3[2])/3)]
+        return center
+
 
         
 
 class ThreeDTesting(ThreeDScene):
     def construct(self):
         test = Icosohedron()
+        self.add(test.faces)
         self.add(test.rectangles)
-        self.embed()
+        self.add(test.verticies)
+
+
