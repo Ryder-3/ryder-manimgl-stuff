@@ -245,8 +245,8 @@ class Icosohedron(VGroup3D):
 
 
         # Making all three rectangles and rotating them into place
-        rectangle_1 = Rectangle(width=golden_ratio,
-                                height=1,
+        rectangle_1 = Rectangle(width=golden_ratio*size,
+                                height=1*size,
                                 color=RED,
                                 fill_color=RED,
                                 fill_opacity=0,
@@ -254,8 +254,8 @@ class Icosohedron(VGroup3D):
                                 )
         
 
-        rectangle_2 = Rectangle(width=1,
-                                height=golden_ratio,
+        rectangle_2 = Rectangle(width=1*size,
+                                height=golden_ratio*size,
                                 color=GREEN,
                                 fill_color=GREEN,
                                 fill_opacity=0,
@@ -264,8 +264,8 @@ class Icosohedron(VGroup3D):
         rectangle_2.rotate(90*DEGREES, Y_AXIS)
 
 
-        rectangle_3 = Rectangle(width=1,
-                                height=golden_ratio,
+        rectangle_3 = Rectangle(width=1*size,
+                                height=golden_ratio*size,
                                 color=BLUE,
                                 fill_color=BLUE,
                                 fill_opacity=0,
@@ -280,69 +280,64 @@ class Icosohedron(VGroup3D):
                        )
 
 
-    # TODO: FIX THE DUPLICATION ERROR!!!! 
+        
+       
         corner_points = VGroup()
         for rectangle in rectangles:
-            corners = rectangle.
+            corners = rectangle.get_all_corners()
+            corners = corners.tolist()
+            new_corners = []
+            for i, el in enumerate(corners):
+                if i % 2 == 1:
+                    new_corners.append(el)
+
             
+            
+
             
             seen_corners = []
             for corner in corners:
                 if corner not in seen_corners:
                     seen_corners.append(corner)
             corners = seen_corners
-            for corner in corners:
-                print(corner)
+            
 
             for corner in corners:
                 point = Dot((corner[0],corner[1],corner[2]))
                 corner_points.add(point)
+        self.test_dots = corner_points
         
+    
         corner_positions = []
+
         for rectangle in rectangles:
 
             corners = rectangle.get_all_corners()   
             corners = corners.tolist()
             
-            seen_corners = []
+            
+            
             for corner in corners:
-                if corner not in seen_corners:
-                    seen_corners.append(corner)
-            corners = seen_corners
+                corner_positions.append(corner)
 
         # All of the corners are now in a list, we now need to make the actual faces
         # We'll make all of the posible equalateral triangles with side length 1, then get rid of all of them with duplicate centers
         
-
-        '''
-        #TEST CODE
-        test_num = 1
-        for point_1 in corner_positions:
-            for point_2 in corner_positions:
-                for point_3 in corner_positions:
-                    print(f"Triangle set {test_num}")
-                    print(self.distenceFormula(point_1,point_2))
-                    print(self.distenceFormula(point_1,point_3))
-                    print(self.distenceFormula(point_2,point_3))
-                    print()
-                    test_num += 1
-
-        '''
         
         
-        # TODO: this is going to be a very slow process, try and find a way to speed it up
+
         
         triangle_points = []
         error = 0.000001
         for point_1 in corner_positions:
             for point_2 in corner_positions:
                 for point_3 in corner_positions:
-                    if (self.distenceFormula(point_1,point_2) < 1 + error and
-                        self.distenceFormula(point_1, point_2) > 1 - error and
-                        self.distenceFormula(point_2, point_3) < 1 + error and
-                        self.distenceFormula(point_2, point_3) > 1 - error and
-                        self.distenceFormula(point_1,point_3) < 1 + error and
-                        self.distenceFormula(point_1, point_3) > 1 - error
+                    if (self.distenceFormula(point_1,point_2) < (1 + error)*size and
+                        self.distenceFormula(point_1, point_2) > (1 - error)*size and
+                        self.distenceFormula(point_2, point_3) < (1 + error)*size and
+                        self.distenceFormula(point_2, point_3) > (1 - error)*size and
+                        self.distenceFormula(point_1,point_3) < (1 + error)*size and
+                        self.distenceFormula(point_1, point_3) > (1 - error)*size
                     ):
                         triangle_points.append([point_1,point_2,point_3])
 
@@ -358,15 +353,6 @@ class Icosohedron(VGroup3D):
         
 
 
-        
-        #TEST CODE
-        test_num = 1
-
-        for el in triangle_points:
-            print(f"triangle {test_num} points = {el}, center = {self.getCenter(el)}")
-            print()
-            test_num += 1
-    
         
         faces = VGroup()
         for face in triangle_points:
@@ -400,8 +386,10 @@ class Icosohedron(VGroup3D):
 class ThreeDTesting(ThreeDScene):
     def construct(self):
         test = Icosohedron()
-        self.add(test.faces)
-        self.add(test.rectangles)
-        self.add(test.verticies)
+        self.wait(2)
+        self.play(ShowCreation(test.rectangles))
+        self.wait(2)
+        self.play(ShowCreation(test.faces),run_time = 2)
+        
 
 
