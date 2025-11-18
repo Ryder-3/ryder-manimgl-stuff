@@ -379,6 +379,11 @@ class Icosohedron(VGroup3D):
         point_1, point_2, point_3 = points
         center = [((point_1[0] + point_2[0] + point_3[0])/3), ((point_1[1] + point_2[1] + point_3[1])/3), ((point_1[2] + point_2[2] + point_3[2])/3)]
         return center
+    def facesCreation(self):
+        creation_animations = []
+        for triangle in self.faces:
+            creation_animations.append(ShowCreation(triangle))
+        return creation_animations
 
 
         
@@ -387,9 +392,8 @@ class ThreeDTesting(ThreeDScene):
     def construct(self):
         test = Icosohedron()
         self.wait(2)
-        self.play(ShowCreation(test.rectangles))
-        self.wait(2)
-        self.play(ShowCreation(test.faces),run_time = 2)
+        self.play(*test.facesCreation(),run_time = 5)
+        
         
 
 
