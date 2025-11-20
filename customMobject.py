@@ -1,6 +1,7 @@
 from __future__ import annotations
 from manimlib import *
 import numpy as np
+import json 
 
 class BarGraph(VGroup):
 
@@ -222,17 +223,27 @@ class LineChart(VGroup):
         else:
             self.add(line)
 
-class Icosohedron(VGroup3D):
-
-    # TODO make this scalable if wanted
-    # TODO make option for fill color to be different from stroke color
+class Icosahedron(VGroup3D):
 
     def __init__(self,
         stroke_color=BLACK,
         fill_color=BLUE,
+        fill_opacity=2,
+        stroke_width=0,
+        shading=(0.2,0.2,0.2),
         size=1,
         **kwargs,
     ):
+        
+        style = dict(
+            fill_color=fill_color,
+            stroke_color=stroke_color,
+            stroke_width=stroke_width,
+            fill_opacity=fill_opacity,
+            shading=shading,
+            **kwargs
+        )
+
         # One can make an Icosohedron by making three "golden rectangles"
         # (rectangles with height = 1 and width = golden ratio),
         # rotating each so their short sides are all on different planes,
@@ -243,7 +254,6 @@ class Icosohedron(VGroup3D):
 
         golden_ratio = (1 + np.sqrt(5))/2
 
-
         # Making all three rectangles and rotating them into place
         rectangle_1 = Rectangle(width=golden_ratio*size,
                                 height=1*size,
@@ -253,7 +263,6 @@ class Icosohedron(VGroup3D):
                                 stroke_color=BLACK,
                                 )
         
-
         rectangle_2 = Rectangle(width=1*size,
                                 height=golden_ratio*size,
                                 color=GREEN,
@@ -262,7 +271,6 @@ class Icosohedron(VGroup3D):
                                 stroke_color=BLACK,
                                 )
         rectangle_2.rotate(90*DEGREES, Y_AXIS)
-
 
         rectangle_3 = Rectangle(width=1*size,
                                 height=golden_ratio*size,
@@ -279,9 +287,6 @@ class Icosohedron(VGroup3D):
                        rectangle_3,
                        )
 
-
-        
-       
         corner_points = VGroup()
         for rectangle in rectangles:
             corners = rectangle.get_all_corners()
@@ -291,23 +296,17 @@ class Icosohedron(VGroup3D):
                 if i % 2 == 1:
                     new_corners.append(el)
 
-            
-            
-
-            
             seen_corners = []
             for corner in corners:
                 if corner not in seen_corners:
                     seen_corners.append(corner)
             corners = seen_corners
-            
-
+        
             for corner in corners:
                 point = Dot((corner[0],corner[1],corner[2]))
                 corner_points.add(point)
         self.test_dots = corner_points
         
-    
         corner_positions = []
 
         for rectangle in rectangles:
@@ -315,17 +314,11 @@ class Icosohedron(VGroup3D):
             corners = rectangle.get_all_corners()   
             corners = corners.tolist()
             
-            
-            
             for corner in corners:
                 corner_positions.append(corner)
 
         # All of the corners are now in a list, we now need to make the actual faces
         # We'll make all of the posible equalateral triangles with side length 1, then get rid of all of them with duplicate centers
-        
-        
-        
-
         
         triangle_points = []
         error = 0.000001
@@ -341,34 +334,91 @@ class Icosohedron(VGroup3D):
                     ):
                         triangle_points.append([point_1,point_2,point_3])
 
-
-
         # now we get rid of all duplicates
-        seen_triangle_centers = []
-        shortend_triangle_points = []
-        for triangle in triangle_points:
-            if self.getCenter(triangle) not in seen_triangle_centers:
-                seen_triangle_centers.append(self.getCenter(triangle))
-                shortend_triangle_points.append(triangle)
-        
+        # Shortend triangle points needs to look like {index (0,1,2) : list of points [[x,y,z],[x,y,z],[x,y,z]]}
 
 
+        sorted_triangle_points = []
+        # Sorting all of the points by size of the x-value
+        for unsorted_corner_positions in triangle_points:
+            sorted_points = []
+            point_1 = unsorted_corner_positions[0]
+            point_2 = unsorted_corner_positions[1]
+            point_3 = unsorted_corner_positions[2]
+            if point_1[0] < point_2[0] and point_1[0] < point_3[0]:
+                sorted_points.append(point_1)
+                #sorted 1
+                if point_2[0] < point_3[0]:
+                    sorted_points.append(point_2)
+                    sorted_points.append(point_3)
+                else:
+                    sorted_points.append(point_3)
+                    sorted_points.append(point_2)
+            elif point_2[0] < point_1[0] and point_2[0] < point_3[0]:
+                sorted_points.append(point_2)
+                if point_1[0] < point_3[0]:
+                    sorted_points.append(point_1)
+                    sorted_points.append(point_3)
+                else:
+                    sorted_points.append(point_3)
+                    sorted_points.append(point_1)
+            elif point_3[0] < point_1[0] and point_3[0] < point_2[0]:
+                sorted_points.append(point_3)
+                if point_1[0] < point_2[0]:
+                    sorted_points.append(point_1)
+                    sorted_points.append(point_2)
+                else:
+                    sorted_points.append(point_2)
+                    sorted_points.append(point_1)
+            if len(sorted_points) != 0:
+                sorted_triangle_points.append(sorted_points)
+
+
+
+        '''
+        shortend_triangle_points = {}
+        seen_triangle_points = []
+        trianlge_index = 0
+        for triangle_points in sorted_triangle_points:
+            if triangle_points not in seen_triangle_points:
+                seen_triangle_points.append(triangle_points)
+                shortend_triangle_points[trianlge_index] = triangle_points
+                trianlge_index += 1
+        '''    
+
+        shortend_triangle_points = triangle_points.copy()
+
+        print("Number of triangles")
+        print(len(shortend_triangle_points))
         
+        
+
+    
         faces = VGroup()
-        for face in triangle_points:
+
+        for i in range(len(shortend_triangle_points)):
             poly = Polygon(
-                np.array([face[0][0],face[0][1],face[0][2]]),
-                np.array([face[1][0],face[1][1],face[1][2]]),
-                np.array([face[2][0],face[2][1],face[2][2]]),
+                np.array([shortend_triangle_points[i][0][0],shortend_triangle_points[i][0][1],shortend_triangle_points[i][0][2]]),
+                np.array([shortend_triangle_points[i][1][0],shortend_triangle_points[i][1][1],shortend_triangle_points[i][1][2]]),
+                np.array([shortend_triangle_points[i][2][0],shortend_triangle_points[i][2][1],shortend_triangle_points[i][2][2]]),
+                **style,
             )
             faces.add(poly)
-        
-        self.verticies = corner_points
-        self.triangle_points = triangle_points
+            
+        super().__init__(*faces,**style)
+
+        """
+        self.apply_depth_test()
+        self.set_gloss(0.5)
+        self.set_shadow(0.5)
+        self.set_reflectiveness(0.2)
+
         self.faces = faces
+        self.verticies = corner_points
+        self.triangle_points = shortend_triangle_points
         self.corner_positions = corner_positions
         self.rectangles = rectangles
-
+        """
     def distenceFormula(self, point_1, point_2):
         return (np.sqrt(
             ((point_1[0] - point_2[0]) ** 2) +
@@ -379,20 +429,24 @@ class Icosohedron(VGroup3D):
         point_1, point_2, point_3 = points
         center = [((point_1[0] + point_2[0] + point_3[0])/3), ((point_1[1] + point_2[1] + point_3[1])/3), ((point_1[2] + point_2[2] + point_3[2])/3)]
         return center
+    
     def facesCreation(self):
         creation_animations = []
         for triangle in self.faces:
             creation_animations.append(ShowCreation(triangle))
         return creation_animations
 
-
-        
-
 class ThreeDTesting(ThreeDScene):
     def construct(self):
-        test = Icosohedron()
-        self.wait(2)
-        self.play(*test.facesCreation(),run_time = 5)
+    
+        axes = ThreeDAxes()
+        self.add(axes)
+        dodec = Dodecahedron()
+        self.add(dodec)
+        
+
+        self.embed()
+        
         
         
 
